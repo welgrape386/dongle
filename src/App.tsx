@@ -125,6 +125,7 @@ function App() {
           {/* ===================== ROOM SCREEN ===================== */}
           <section id="screen-room" className="scene room-scene">
             <img id="room-bg" className="room-bg" alt="" />
+            <img id="room-char" className="room-char" alt="" />
             <div className="room-namebar" id="room-namebar"></div>
           </section>
 

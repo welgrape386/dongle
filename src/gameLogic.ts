@@ -600,11 +600,12 @@ function playIntroCutscene(){
 
   // populate the destination room now, before the cut to black reveals it
   document.getElementById('room-bg').src = job.roomImg;
+  document.getElementById('room-char').src = job.img;
   document.getElementById('room-namebar').textContent = `${playerName}님의 ${job.name}존`;
   roomScene.style.setProperty('--accent', job.accent);
 
   // brief pause after the click registers, before the chaos starts
-  const START_DELAY = 400;
+  const START_DELAY = 2000;
 
   // 1) violent shake + glitch + rumble
   setTimeout(()=>{
