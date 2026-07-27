@@ -386,6 +386,7 @@
     filter:url(#sharpenFilter) contrast(1.06) saturate(1.08);
   }
   .modal-title{font-size:18px; color:var(--cream); margin:0 0 4px; font-weight:400; letter-spacing:0.3px;}
+  #step-tier .modal-title{margin-top:14px;}
   .modal-title b{color:var(--accent, var(--yellow)); text-shadow:0 0 8px var(--accent, var(--yellow)); font-weight:600;}
   .modal-sub{font-size:15px; color:var(--dim); margin:0 0 18px;}
 
@@ -399,7 +400,6 @@
     transition:transform .1s ease, border-color .1s ease;
   }
   .tier-btn svg{width:36px; height:36px;}
-  .tier-btn:hover{border-color:var(--cyan);}
   .tier-btn.selected{border-color:var(--accent,var(--yellow)); color:var(--white); box-shadow:0 0 14px var(--accent,var(--yellow)); transform:translateY(-2px);}
   .tier-btn.neon{border-color:var(--accent); box-shadow:0 0 8px var(--accent), 0 0 2px var(--accent) inset;}
   .tier-btn.neon.selected{box-shadow:0 0 18px var(--accent), 0 0 30px var(--accent), 0 0 4px var(--accent) inset;}
