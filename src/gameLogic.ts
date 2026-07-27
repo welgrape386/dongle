@@ -274,23 +274,63 @@ function flashStatic(){
   setTimeout(()=>staticEl.remove(), 450);
 }
 
+// short buzz/crackle for a single "flicker on" beat of the boot sequence
+function playFlickerTick(intensity=1){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(70 + Math.random()*50, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.05 + 0.12*intensity, t+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09 + 0.05*intensity);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.16 + 0.05*intensity);
+  }catch(e){}
+  playStaticBurst(0.05 + 0.03*intensity, 0.12 + 0.08*intensity);
+}
+
+// steady little hum swell once the light has fully caught and settled on
+function playBulbSettle(){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(220, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.1, t+0.15);
+    gain.gain.linearRampToValueAtTime(0.05, t+0.5);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.9);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t+0.95);
+  }catch(e){}
+}
+
 /**
  * Boot flicker: runs once when the page loads. The screen is dark, then
- * flickers dim/bright a few times like an old TV warming up (깜빡깜빡 지지직~),
- * then settles fully lit on the START screen. No flying debris here — just
- * dimming/brightening + static noise, so it reads as "powering on" rather
- * than a transition effect.
+ * flickers dim/bright a few times like an old TV/bulb warming up
+ * (깜빡깜빡 지지직~), then settles fully lit on the START screen.
+ * The buzz/crackle sounds are timed to match each bright "on" beat of the
+ * crtBoot keyframes exactly (24/36/46/58/70/84/100% of the 1.5s animation),
+ * so the audio and the flicker always land together.
  */
 function bootSequence(){
   // crt-boot is already present in the initial HTML (App.tsx),
   // so the animation starts the moment the browser first paints.
-  // Here we only play audio + static overlays in sync with keyframes,
-  // then remove the class once the animation ends.
-  playPowerHum(1.5);
-  setTimeout(flashStatic, 350);
-  setTimeout(flashStatic, 540);
-  setTimeout(flashStatic, 690);
-  setTimeout(flashStatic, 870);
+  // ms marks below correspond to crtBoot's bright ("on") keyframe stops.
+  const beats = [360, 540, 690, 870, 1050, 1260];
+  beats.forEach((ms, i)=>{
+    setTimeout(()=>{
+      flashStatic();
+      playFlickerTick((i+1)/beats.length);
+    }, ms);
+  });
+  setTimeout(playBulbSettle, 1500);
+
   const onEnd = (e)=>{
     if(e.animationName === 'crtBoot'){
       screenEl.classList.remove('crt-boot');
@@ -326,10 +366,14 @@ function crtTransition(swapFn, colors){
     screenEl.classList.remove('crt-out');
     void screenEl.offsetWidth;
     screenEl.classList.add('crt-in');
-    playZap();
     flashStatic();
     spawnGlitchDebris(colors);
     setTimeout(()=>{ flashStatic(); spawnGlitchDebris(colors); }, 150);
+
+    // crt-in takes ~480ms to expand from a collapsed line to the full
+    // picture — play the "opening" zap right as it finishes unfolding,
+    // not the instant the (still-collapsed) animation starts.
+    setTimeout(()=>{ playZap(); }, 400);
 
     setTimeout(()=>{
       screenEl.classList.remove('crt-in');
@@ -557,25 +601,30 @@ function playIntroCutscene(){
 
   roomSub.textContent = `${playerName}님의 ${job.name} 작업실`;
 
+  // brief pause after the click registers, before the chaos starts
+  const START_DELAY = 400;
+
   // 1) violent shake + glitch + rumble
-  screenEl.classList.remove('shake-violent');
-  void screenEl.offsetWidth;
-  screenEl.classList.add('shake-violent');
-  flashStatic();
-  spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
-  playRumble(0.5);
-  setTimeout(()=>screenEl.classList.remove('shake-violent'), 520);
+  setTimeout(()=>{
+    screenEl.classList.remove('shake-violent');
+    void screenEl.offsetWidth;
+    screenEl.classList.add('shake-violent');
+    flashStatic();
+    spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
+    playRumble(0.5);
+    setTimeout(()=>screenEl.classList.remove('shake-violent'), 520);
+  }, START_DELAY);
 
   // 2) the confirm panel gets hit and tumbles down-right, with thuds at each beat
   setTimeout(()=>{
     modalBox.classList.add('impact-fall');
     playThud(1.2);
-  }, 120);
-  setTimeout(()=>playThud(0.9), 120+330);
-  setTimeout(()=>playThud(0.7), 120+560);
+  }, START_DELAY+120);
+  setTimeout(()=>playThud(0.9), START_DELAY+120+330);
+  setTimeout(()=>playThud(0.7), START_DELAY+120+560);
 
   // 3) the select screen behind it crumbles away
-  setTimeout(()=>{ selectScene.classList.add('crumbling'); }, 150);
+  setTimeout(()=>{ selectScene.classList.add('crumbling'); }, START_DELAY+150);
 
   // 4) dialogue: shaking, typed out one character at a time
   const LINE = '악!! 아악...!!!';
@@ -594,11 +643,12 @@ function playIntroCutscene(){
         i++;
         setTimeout(typeNext, 85);
       } else {
-        setTimeout(finishDialogue, 450);
+        // hold the shaking dialogue on screen a beat longer before the boom
+        setTimeout(finishDialogue, 1600);
       }
     };
     typeNext();
-  }, 950);
+  }, START_DELAY+950);
 
   // 5) final boom + hard cut to black
   function finishDialogue(){
