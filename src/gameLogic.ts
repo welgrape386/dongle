@@ -594,12 +594,16 @@ function playIntroCutscene(){
   const modalBox = document.querySelector('.modal-box');
   const selectScene = document.getElementById('screen-select');
   const roomScene = document.getElementById('screen-room');
-  const roomSub = document.getElementById('room-sub');
   const dialogue = document.getElementById('cutscene-dialogue');
   const blackout = document.getElementById('cutscene-blackout');
   const job = JOBS[index];
 
-  roomSub.textContent = `${playerName}님의 ${job.name} 작업실`;
+  // populate the destination room now, before the cut to black reveals it
+  document.getElementById('room-bg').src = job.roomImg;
+  document.getElementById('room-namebar').textContent = `${playerName}님의 ${job.name}존`;
+  document.getElementById('room-stat-label').textContent = job.statLabel;
+  document.getElementById('room-face').src = job.img;
+  roomScene.style.setProperty('--accent', job.accent);
 
   // brief pause after the click registers, before the chaos starts
   const START_DELAY = 400;
