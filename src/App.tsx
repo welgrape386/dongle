@@ -126,15 +126,6 @@ function App() {
           <section id="screen-room" className="scene room-scene">
             <img id="room-bg" className="room-bg" alt="" />
             <div className="room-namebar" id="room-namebar"></div>
-            <div className="room-statbar">
-              <div className="room-stat-left">
-                <span className="room-stat-label" id="room-stat-label">FARM</span>
-                <span className="room-stat-track"><span className="room-stat-fill" id="room-stat-fill"></span></span>
-              </div>
-              <div className="room-stat-right">
-                <img id="room-face" className="room-face" alt="" />
-              </div>
-            </div>
           </section>
 
           <div className="cutscene-dialogue" id="cutscene-dialogue"></div>

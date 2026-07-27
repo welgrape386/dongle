@@ -601,8 +601,6 @@ function playIntroCutscene(){
   // populate the destination room now, before the cut to black reveals it
   document.getElementById('room-bg').src = job.roomImg;
   document.getElementById('room-namebar').textContent = `${playerName}님의 ${job.name}존`;
-  document.getElementById('room-stat-label').textContent = job.statLabel;
-  document.getElementById('room-face').src = job.img;
   roomScene.style.setProperty('--accent', job.accent);
 
   // brief pause after the click registers, before the chaos starts
