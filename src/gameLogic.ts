@@ -591,24 +591,23 @@ function submitNickname(){
  * on the (placeholder) room screen.
  */
 function playIntroCutscene(){
-  const modalBox = document.querySelector('.modal-box');
   const selectScene = document.getElementById('screen-select');
   const roomScene = document.getElementById('screen-room');
+  const roomSub = document.getElementById('room-sub');
   const dialogue = document.getElementById('cutscene-dialogue');
   const blackout = document.getElementById('cutscene-blackout');
   const job = JOBS[index];
 
-  // populate the destination room now, before the cut to black reveals it
-  document.getElementById('room-bg').src = job.roomImg;
-  document.getElementById('room-char').src = job.img;
-  document.getElementById('room-namebar').textContent = `${playerName}님의 ${job.name}존`;
-  roomScene.style.setProperty('--accent', job.accent);
+  roomSub.textContent = `${playerName}님의 ${job.name} 작업실`;
 
-  // brief pause after the click registers, before the chaos starts
-  const START_DELAY = 2000;
+  // 1) the confirm panel turns off right away
+  modal.classList.remove('active');
 
-  // 1) violent shake + glitch + rumble
+  // 2) hold on the plain background for a beat before anything happens
+  const HOLD_DELAY = 2000;
+
   setTimeout(()=>{
+    // 3) violent shake + glitch + rumble
     screenEl.classList.remove('shake-violent');
     void screenEl.offsetWidth;
     screenEl.classList.add('shake-violent');
@@ -616,44 +615,33 @@ function playIntroCutscene(){
     spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
     playRumble(0.5);
     setTimeout(()=>screenEl.classList.remove('shake-violent'), 520);
-  }, START_DELAY);
 
-  // 2) the confirm panel gets hit and tumbles down-right, with thuds at each beat
-  setTimeout(()=>{
-    modalBox.classList.add('impact-fall');
-    playThud(1.2);
-  }, START_DELAY+120);
-  setTimeout(()=>playThud(0.9), START_DELAY+120+330);
-  setTimeout(()=>playThud(0.7), START_DELAY+120+560);
+    // 4) the select screen crumbles away
+    setTimeout(()=>{ selectScene.classList.add('crumbling'); }, 150);
 
-  // 3) the select screen behind it crumbles away
-  setTimeout(()=>{ selectScene.classList.add('crumbling'); }, START_DELAY+150);
+    // 5) dialogue: shaking, typed out one character at a time
+    const LINE = '악!! 아악...!!!';
+    setTimeout(()=>{
+      dialogue.textContent = '';
+      dialogue.classList.add('show','shake');
 
-  // 4) dialogue: shaking, typed out one character at a time
-  const LINE = '악!! 아악...!!!';
-  setTimeout(()=>{
-    modal.classList.remove('active');
-    modalBox.classList.remove('impact-fall');
+      let i = 0;
+      const typeNext = ()=>{
+        if(i < LINE.length){
+          dialogue.textContent += LINE[i];
+          if(LINE[i] !== ' ') playTick();
+          i++;
+          setTimeout(typeNext, 85);
+        } else {
+          // hold the shaking dialogue on screen a beat longer before the boom
+          setTimeout(finishDialogue, 1600);
+        }
+      };
+      typeNext();
+    }, 950);
+  }, HOLD_DELAY);
 
-    dialogue.textContent = '';
-    dialogue.classList.add('show','shake');
-
-    let i = 0;
-    const typeNext = ()=>{
-      if(i < LINE.length){
-        dialogue.textContent += LINE[i];
-        if(LINE[i] !== ' ') playTick();
-        i++;
-        setTimeout(typeNext, 85);
-      } else {
-        // hold the shaking dialogue on screen a beat longer before the boom
-        setTimeout(finishDialogue, 1600);
-      }
-    };
-    typeNext();
-  }, START_DELAY+950);
-
-  // 5) final boom + hard cut to black
+  // 6) final boom + hard cut to black
   function finishDialogue(){
     dialogue.classList.remove('show','shake');
     dialogue.textContent = '';
@@ -662,12 +650,12 @@ function playIntroCutscene(){
     blackout.classList.remove('blink-open');
     blackout.classList.add('on');
 
-    // 6) swap scenes while the screen is fully black
+    // 7) swap scenes while the screen is fully black
     setTimeout(()=>{
       selectScene.classList.remove('active','crumbling');
       roomScene.classList.add('active');
 
-      // 7) hold darkness for 2s, then slowly blink the eyes open
+      // 8) hold darkness for 2s, then slowly blink the eyes open
       setTimeout(()=>{
         blackout.classList.add('blink-open');
         setTimeout(()=>{
