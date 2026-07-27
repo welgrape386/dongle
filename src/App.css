@@ -192,6 +192,12 @@
   .pixel-btn:hover{border-color:var(--cyan);}
   .pixel-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #0c0818;}
   .pixel-btn:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+  .pixel-btn:disabled{
+    opacity:.4; cursor:not-allowed; border-color:var(--panel-edge);
+    box-shadow:0 3px 0 #0c0818;
+  }
+  .pixel-btn:disabled:hover{border-color:var(--panel-edge);}
+  .pixel-btn:disabled:active{transform:none; box-shadow:0 3px 0 #0c0818;}
 
   /* ===== START SCREEN — badge card like ref image ===== */
   #screen-start{padding:0;}
@@ -373,6 +379,11 @@
 
   .modal-overlay{position:absolute; inset:0; background:rgba(8,4,18,.85); display:none; align-items:center; justify-content:center; z-index:10; padding:20px;}
   .modal-overlay.active{display:flex;}
+  .modal-overlay.active .modal-box{animation:modalPopIn .18s cubic-bezier(.2,1.4,.4,1) both;}
+  @keyframes modalPopIn{
+    0%{opacity:0; transform:scale(.92) translateY(8px);}
+    100%{opacity:1; transform:scale(1) translateY(0);}
+  }
   .modal-box{position:relative; background:var(--panel); border:2px solid var(--panel-edge); border-radius:10px; padding:clamp(18px,2.4vw,28px) clamp(16px,2.4vw,26px); text-align:center; width:min(92vw, 420px); box-shadow:0 6px 0 #0c0818;}
   .modal-x{
     position:absolute; top:10px; right:10px; width:28px; height:28px;
@@ -438,7 +449,17 @@
     90%{transform:translate(-3px,3px) rotate(-.3deg);}
     100%{transform:translate(0,0) rotate(0deg);}
   }
-  .screen.shake-violent{ animation:screenShake .5s linear; }
+  /* looping while the class is applied; JS controls total shake duration */
+  .screen.shake-violent{ animation:screenShake .28s linear infinite; }
+
+  /* short single "투둑" pre-shake jolt, used twice before the big shake */
+  @keyframes screenBump{
+    0%{transform:translate(0,0) rotate(0deg);}
+    30%{transform:translate(-5px,3px) rotate(-.5deg);}
+    60%{transform:translate(4px,-3px) rotate(.4deg);}
+    100%{transform:translate(0,0) rotate(0deg);}
+  }
+  .screen.shake-bump{ animation:screenBump .16s ease-out; }
 
   @keyframes modalImpactFall{
     0%  {transform:translate(0,0) rotate(0deg) scale(1);}
@@ -505,11 +526,24 @@
     100%{opacity:0;}
   }
 
-  /* ===== ROOM SCREEN (placeholder) ===== */
-  .room-scene{align-items:center; justify-content:center;}
-  .room-placeholder{
-    display:flex; flex-direction:column; align-items:center; gap:10px;
-    text-align:center;
+  /* ===== ROOM / ENDING SCREEN ===== */
+  .room-scene{
+    align-items:center; justify-content:center;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(138,92,255,.18), transparent 60%),
+      var(--bg-deep);
+  }
+  .room-content{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    text-align:center; animation:roomFadeIn .5s ease both;
+  }
+  @keyframes roomFadeIn{
+    0%{opacity:0; transform:translateY(10px);}
+    100%{opacity:1; transform:translateY(0);}
+  }
+  .room-badge{
+    font-size:12px; letter-spacing:3px; color:var(--yellow);
+    text-shadow:1px 1px 0 #000; margin-bottom:4px;
   }
   .room-title{
     font-family:'NeoDunggeunGothicPro', monospace;
@@ -517,7 +551,12 @@
     text-shadow:3px 3px 0 var(--purple), 0 0 20px rgba(138,92,255,.5);
   }
   .room-sub{font-size:16px; color:var(--dim);}
-  .room-hint{font-size:13px; color:var(--dim); opacity:.6; margin-top:14px;}
+  .room-divider{
+    width:120px; height:2px; margin:14px 0;
+    background:linear-gradient(90deg, transparent, var(--panel-edge), transparent);
+  }
+  .room-flavor{font-size:14px; color:var(--dim); opacity:.85; margin-bottom:22px;}
+  .room-restart{font-size:14px; padding:9px 22px;}
 
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important; transition-duration:.001ms !important;}

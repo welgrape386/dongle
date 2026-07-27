@@ -366,14 +366,10 @@ function crtTransition(swapFn, colors){
     screenEl.classList.remove('crt-out');
     void screenEl.offsetWidth;
     screenEl.classList.add('crt-in');
+    playZap();
     flashStatic();
     spawnGlitchDebris(colors);
     setTimeout(()=>{ flashStatic(); spawnGlitchDebris(colors); }, 150);
-
-    // crt-in takes ~480ms to expand from a collapsed line to the full
-    // picture — play the "opening" zap right as it finishes unfolding,
-    // not the instant the (still-collapsed) animation starts.
-    setTimeout(()=>{ playZap(); }, 400);
 
     setTimeout(()=>{
       screenEl.classList.remove('crt-in');
@@ -403,6 +399,7 @@ optYes.addEventListener('click', ()=>{
 });
 optNo.addEventListener('click', ()=>{
   setSelection(false);
+  playBlip(false);
   ynRow.classList.remove('shake'); void ynRow.offsetWidth; ynRow.classList.add('shake');
   const msgs = ['용기를 내보세요!','직업 선택이 기다려요!','다시 생각해봐요!'];
   noToast.textContent = msgs[Math.floor(Math.random()*msgs.length)];
@@ -561,7 +558,10 @@ tierNext.addEventListener('click', ()=>{
   setTimeout(()=>nicknameInput.focus(), 50);
 });
 
-document.getElementById('nickname-back').addEventListener('click', ()=>showStep(stepTier));
+document.getElementById('nickname-back').addEventListener('click', ()=>{
+  playBlip(false);
+  showStep(stepTier);
+});
 
 function submitNickname(){
   const val = nicknameInput.value.trim();
@@ -598,47 +598,71 @@ function playIntroCutscene(){
   const blackout = document.getElementById('cutscene-blackout');
   const job = JOBS[index];
 
-  roomSub.textContent = `${playerName}님의 ${job.name} 작업실`;
+  document.getElementById('room-title').textContent = `${job.name}의 방`;
+  roomSub.textContent = `${playerName}님, ${TIER_LABELS[chosenTier]} ${job.name}(으)로 모험을 시작합니다!`;
 
   // 1) the confirm panel turns off right away
   modal.classList.remove('active');
 
   // 2) hold on the plain background for a beat before anything happens
-  const HOLD_DELAY = 2000;
+  const HOLD_DELAY = 1000;
 
   setTimeout(()=>{
-    // 3) violent shake + glitch + rumble
-    screenEl.classList.remove('shake-violent');
+    // 3) two light pre-shake bumps ("투둑 투툭")
+    screenEl.classList.remove('shake-bump');
     void screenEl.offsetWidth;
-    screenEl.classList.add('shake-violent');
-    flashStatic();
-    spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
-    playRumble(0.5);
-    setTimeout(()=>screenEl.classList.remove('shake-violent'), 520);
+    screenEl.classList.add('shake-bump');
+    playThud(0.45);
 
-    // 4) the select screen crumbles away
-    setTimeout(()=>{ selectScene.classList.add('crumbling'); }, 150);
-
-    // 5) dialogue: shaking, typed out one character at a time
-    const LINE = '악!! 아악...!!!';
     setTimeout(()=>{
-      dialogue.textContent = '';
-      dialogue.classList.add('show','shake');
+      screenEl.classList.remove('shake-bump');
+      void screenEl.offsetWidth;
+      screenEl.classList.add('shake-bump');
+      playThud(0.6);
+    }, 220);
 
-      let i = 0;
-      const typeNext = ()=>{
-        if(i < LINE.length){
-          dialogue.textContent += LINE[i];
-          if(LINE[i] !== ' ') playTick();
-          i++;
-          setTimeout(typeNext, 85);
-        } else {
-          // hold the shaking dialogue on screen a beat longer before the boom
-          setTimeout(finishDialogue, 1600);
-        }
-      };
-      typeNext();
-    }, 950);
+    setTimeout(()=>{
+      screenEl.classList.remove('shake-bump');
+    }, 220+180);
+
+    // 4) after the two bumps, the screen shakes violently for 1.5s straight
+    const SHAKE_DURATION = 1500;
+    setTimeout(()=>{
+      screenEl.classList.add('shake-violent');
+      flashStatic();
+      spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
+      setTimeout(()=>{ flashStatic(); spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']); }, 500);
+      setTimeout(()=>{ flashStatic(); spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']); }, 1000);
+      playRumble(SHAKE_DURATION/1000);
+
+      setTimeout(()=>{
+        screenEl.classList.remove('shake-violent');
+
+        // 5) the select screen crumbles down once the shaking stops
+        selectScene.classList.add('crumbling');
+
+        // 6) dialogue appears once the crumble has settled
+        const LINE = '악!! 아악...!!!';
+        setTimeout(()=>{
+          dialogue.textContent = '';
+          dialogue.classList.add('show','shake');
+
+          let i = 0;
+          const typeNext = ()=>{
+            if(i < LINE.length){
+              dialogue.textContent += LINE[i];
+              if(LINE[i] !== ' ') playTick();
+              i++;
+              setTimeout(typeNext, 85);
+            } else {
+              // hold the shaking dialogue on screen a beat longer before the boom
+              setTimeout(finishDialogue, 1600);
+            }
+          };
+          typeNext();
+        }, 800);
+      }, SHAKE_DURATION);
+    }, 220+180+120);
   }, HOLD_DELAY);
 
   // 6) final boom + hard cut to black
@@ -674,7 +698,28 @@ document.getElementById('modal-close').addEventListener('click', ()=>{
 });
 
 document.getElementById('modal-x').addEventListener('click', ()=>{
+  playBlip(false);
   modal.classList.remove('active');
+});
+
+// click the dimmed overlay (outside the box) to close, same as the X button
+modal.addEventListener('click', (e)=>{
+  if(e.target === modal){
+    playBlip(false);
+    modal.classList.remove('active');
+  }
+});
+
+// Esc closes the modal too
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && modal.classList.contains('active')){
+    playBlip(false);
+    modal.classList.remove('active');
+  }
+});
+
+document.getElementById('room-restart').addEventListener('click', ()=>{
+  window.location.reload();
 });
 
 }

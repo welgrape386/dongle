@@ -122,12 +122,15 @@ function App() {
             </div>
           </div>
 
-          {/* ===================== ROOM SCREEN (placeholder) ===================== */}
+          {/* ===================== ROOM / ENDING SCREEN ===================== */}
           <section id="screen-room" className="scene room-scene">
-            <div className="room-placeholder">
-              <div className="room-title">내 방</div>
+            <div className="room-content">
+              <div className="room-badge">✦ WELCOME ✦</div>
+              <div className="room-title" id="room-title">내 방</div>
               <div className="room-sub" id="room-sub"></div>
-              <div className="room-hint">( 방 화면은 추후 채워질 예정입니다 )</div>
+              <div className="room-divider"></div>
+              <div className="room-flavor">새로운 모험이 이제 막 시작됐어요.</div>
+              <button className="pixel-btn select-btn room-restart" id="room-restart">처음으로</button>
             </div>
           </section>
 
