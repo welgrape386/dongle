@@ -21,7 +21,7 @@ function App() {
       <div id="stars"></div>
 
       <div className="console">
-        <div className="screen">
+        <div className="screen crt-boot" id="screen">
           <div className="scanlines"></div>
           <div className="fx-layer" id="fx-layer"></div>
 
@@ -55,7 +55,7 @@ function App() {
           {/* ===================== SELECT SCREEN ===================== */}
           <section id="screen-select" className="scene">
             <div className="select-title">
-              <span className="deco l">🚀</span>직업<span className="deco r">🚀</span>
+              <span className="deco l">🚀</span>직업을 선택하세요<span className="deco r">🚀</span>
             </div>
 
             <div className="job-panel">
@@ -93,8 +93,7 @@ function App() {
               {/* STEP 1: 차수 선택 */}
               <div className="modal-step active" id="step-tier">
                 <div className="m-frame" id="tier-frame"><img id="tier-job-img" alt="" /></div>
-                <p className="modal-title"><b id="tier-job-name"></b> 차수를 선택하세요</p>
-                <div className="modal-sub">원하는 차수를 골라주세요</div>
+                <p className="modal-title">현재 차수를 선택하세요</p>
                 <div className="tier-row" id="tier-row"></div>
                 <div className="modal-actions">
                   <button className="pixel-btn select-btn" id="tier-next" disabled>다음</button>

@@ -154,7 +154,7 @@ function playSelect(){
 
 /* ---------------- CRT suck-in / glitch transition fx ---------------- */
 const fxLayer = document.getElementById('fx-layer');
-const screenEl = document.querySelector('.screen');
+const screenEl = document.getElementById('screen');
 
 function spawnGlitchDebris(colors){
   // flying horizontal glitch bars (screen slices whipping past)
@@ -210,7 +210,10 @@ function flashStatic(){
  * than a transition effect.
  */
 function bootSequence(){
-  screenEl.classList.add('crt-boot');
+  // crt-boot is already present in the initial HTML (App.tsx),
+  // so the animation starts the moment the browser first paints.
+  // Here we only play audio + static overlays in sync with keyframes,
+  // then remove the class once the animation ends.
   playPowerHum(1.5);
   setTimeout(flashStatic, 350);
   setTimeout(flashStatic, 540);
@@ -224,13 +227,7 @@ function bootSequence(){
   };
   screenEl.addEventListener('animationend', onEnd);
 }
-// Run after the browser has painted at least once. We avoid relying on
-// document.readyState / the window 'load' event here: in a React app this
-// code runs inside a useEffect *after* the page has already mounted, so the
-// 'load' event may have already fired earlier and a fresh listener for it
-// would never call back — leaving the boot flicker looking like it "does
-// nothing". A couple of requestAnimationFrame ticks guarantees we start
-// right after paint, every time.
+// Use rAF so the listener is attached in the same frame the animation starts.
 requestAnimationFrame(()=>requestAnimationFrame(bootSequence));
 
 /**
