@@ -373,8 +373,8 @@ function crtTransition(swapFn, colors){
 
     setTimeout(()=>{
       screenEl.classList.remove('crt-in');
-    }, 500);
-  }, 420);
+    }, 460);
+  }, 400);
 }
 
 /* ---------------- start screen logic ---------------- */
