@@ -152,6 +152,78 @@ function playSelect(){
   }catch(e){}
 }
 
+/* ---------------- intro-cutscene impact sounds ---------------- */
+
+// low "쿵" impact thud, used for the falling panel's hits/bounces
+function playThud(strength=1){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(160*strength, t);
+    osc.frequency.exponentialRampToValueAtTime(35, t+0.18);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.32*strength, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t+0.23);
+  }catch(e){}
+  playStaticBurst(0.08, 0.1);
+}
+
+// tiny "딱" typewriter click, one per character
+function playTick(){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1400 + Math.random()*400, t);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.035);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t+0.04);
+  }catch(e){}
+}
+
+// big final "쿵!" before the blackout hits
+function playBoom(){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t+0.35);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.45);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t+0.46);
+  }catch(e){}
+  playStaticBurst(0.22, 0.25);
+}
+
+// sustained low rumble under the screen shake
+function playRumble(duration=0.5){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  try{
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuffer(ctx, duration);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 220;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.22, t);
+    gain.gain.linearRampToValueAtTime(0.14, t+duration*0.7);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+duration);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(); src.stop(t+duration);
+  }catch(e){}
+}
+
 /* ---------------- CRT suck-in / glitch transition fx ---------------- */
 const fxLayer = document.getElementById('fx-layer');
 const screenEl = document.getElementById('screen');
@@ -337,14 +409,36 @@ function renderSlots(){
   buildDots();
 }
 
+let carouselBusy = false;
+
 function goTo(newIndex, dir){
+  if(carouselBusy) return;
+  carouselBusy = true;
+
   index = (newIndex + len) % len;
-  row3.classList.add(dir > 0 ? 'anim-next' : 'anim-prev');
   playBlip(dir > 0);
+
+  // phase 1: slide the current job out
+  row3.classList.add(dir > 0 ? 'anim-out-next' : 'anim-out-prev');
+
   setTimeout(()=>{
+    // swap content while invisible
     renderSlots();
-    row3.classList.remove('anim-next','anim-prev');
-  }, 220);
+    row3.classList.remove('anim-out-next','anim-out-prev');
+
+    // phase 2 setup: snap new job to a lower/smaller starting point, no transition
+    row3.classList.add('anim-in-start');
+    void row3.offsetWidth; // force reflow so the snap applies before animating
+
+    // phase 2: rise up into place
+    row3.classList.remove('anim-in-start');
+    row3.classList.add('anim-in');
+
+    setTimeout(()=>{
+      row3.classList.remove('anim-in');
+      carouselBusy = false;
+    }, 280);
+  }, 190);
 }
 
 document.getElementById('btn-prev').addEventListener('click', ()=>goTo(index-1,-1));
@@ -444,11 +538,98 @@ function submitNickname(){
   showStep(stepConfirm);
 }
 
+/**
+ * Intro cutscene played when the player confirms their job on the final
+ * step: the screen shakes, the confirm panel gets "hit" and tumbles off
+ * to the bottom-right with a few thuds, the select screen behind it
+ * crumbles away, a shaking typed-out line of dialogue appears, then a
+ * final boom cuts to black — and after a beat, the screen blinks open
+ * on the (placeholder) room screen.
+ */
+function playIntroCutscene(){
+  const modalBox = document.querySelector('.modal-box');
+  const selectScene = document.getElementById('screen-select');
+  const roomScene = document.getElementById('screen-room');
+  const roomSub = document.getElementById('room-sub');
+  const dialogue = document.getElementById('cutscene-dialogue');
+  const blackout = document.getElementById('cutscene-blackout');
+  const job = JOBS[index];
+
+  roomSub.textContent = `${playerName}님의 ${job.name} 작업실`;
+
+  // 1) violent shake + glitch + rumble
+  screenEl.classList.remove('shake-violent');
+  void screenEl.offsetWidth;
+  screenEl.classList.add('shake-violent');
+  flashStatic();
+  spawnGlitchDebris(['var(--pink)','var(--cyan)','var(--purple)']);
+  playRumble(0.5);
+  setTimeout(()=>screenEl.classList.remove('shake-violent'), 520);
+
+  // 2) the confirm panel gets hit and tumbles down-right, with thuds at each beat
+  setTimeout(()=>{
+    modalBox.classList.add('impact-fall');
+    playThud(1.2);
+  }, 120);
+  setTimeout(()=>playThud(0.9), 120+330);
+  setTimeout(()=>playThud(0.7), 120+560);
+
+  // 3) the select screen behind it crumbles away
+  setTimeout(()=>{ selectScene.classList.add('crumbling'); }, 150);
+
+  // 4) dialogue: shaking, typed out one character at a time
+  const LINE = '악!! 아악...!!!';
+  setTimeout(()=>{
+    modal.classList.remove('active');
+    modalBox.classList.remove('impact-fall');
+
+    dialogue.textContent = '';
+    dialogue.classList.add('show','shake');
+
+    let i = 0;
+    const typeNext = ()=>{
+      if(i < LINE.length){
+        dialogue.textContent += LINE[i];
+        if(LINE[i] !== ' ') playTick();
+        i++;
+        setTimeout(typeNext, 85);
+      } else {
+        setTimeout(finishDialogue, 450);
+      }
+    };
+    typeNext();
+  }, 950);
+
+  // 5) final boom + hard cut to black
+  function finishDialogue(){
+    dialogue.classList.remove('show','shake');
+    dialogue.textContent = '';
+
+    playBoom();
+    blackout.classList.remove('blink-open');
+    blackout.classList.add('on');
+
+    // 6) swap scenes while the screen is fully black
+    setTimeout(()=>{
+      selectScene.classList.remove('active','crumbling');
+      roomScene.classList.add('active');
+
+      // 7) hold darkness for 2s, then slowly blink the eyes open
+      setTimeout(()=>{
+        blackout.classList.add('blink-open');
+        setTimeout(()=>{
+          blackout.classList.remove('on','blink-open');
+        }, 1350);
+      }, 2000);
+    }, 120);
+  }
+}
+
 document.getElementById('nickname-next').addEventListener('click', submitNickname);
 nicknameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitNickname(); });
 
 document.getElementById('modal-close').addEventListener('click', ()=>{
-  modal.classList.remove('active');
+  playIntroCutscene();
 });
 
 document.getElementById('modal-x').addEventListener('click', ()=>{

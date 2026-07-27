@@ -313,12 +313,21 @@
   .row3{
     display:flex; align-items:center; justify-content:center;
     gap:clamp(14px,2.6vw,40px);
-    transition:transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s ease;
     flex:1 1 auto;
     min-width:0;
+    transition:transform .18s cubic-bezier(.5,0,.75,0), opacity .18s ease;
   }
-  .row3.anim-next{transform:translateX(-34px) scale(.93); opacity:.3;}
-  .row3.anim-prev{transform:translateX(34px) scale(.93); opacity:.3;}
+  /* phase 1: current job slides out */
+  .row3.anim-out-next{transform:translateX(-46px) scale(.85); opacity:0;}
+  .row3.anim-out-prev{transform:translateX(46px) scale(.85); opacity:0;}
+  /* phase 2 setup: new job starts lower + small, no transition (instant snap) */
+  .row3.anim-in-start{transition:none !important; transform:translateY(22px) scale(.85); opacity:0;}
+  /* phase 2: new job rises up into place */
+  .row3.anim-in{
+    transition:transform .26s cubic-bezier(.2,1.4,.4,1), opacity .22s ease;
+    transform:translateY(0) scale(1);
+    opacity:1;
+  }
 
   .slot{display:flex; flex-direction:column; align-items:center; flex:0 0 auto;}
   .frame{
@@ -414,6 +423,101 @@
   .modal-box p{font-size:16px; line-height:1.9; color:var(--yellow); margin:0 0 18px; font-weight:400; letter-spacing:0.2px;}
   .modal-box p b{color:inherit; font-weight:600;}
   .modal-actions{display:flex; gap:10px; justify-content:center;}
+
+  /* ===== INTRO CUTSCENE: shake / impact-fall / crumble / dialogue / blackout ===== */
+  @keyframes screenShake{
+    0%{transform:translate(0,0) rotate(0deg);}
+    10%{transform:translate(-7px,5px) rotate(-.6deg);}
+    20%{transform:translate(6px,-6px) rotate(.5deg);}
+    30%{transform:translate(-8px,-3px) rotate(-.7deg);}
+    40%{transform:translate(7px,6px) rotate(.6deg);}
+    50%{transform:translate(-5px,7px) rotate(-.4deg);}
+    60%{transform:translate(8px,-5px) rotate(.7deg);}
+    70%{transform:translate(-6px,-7px) rotate(-.5deg);}
+    80%{transform:translate(5px,6px) rotate(.4deg);}
+    90%{transform:translate(-3px,3px) rotate(-.3deg);}
+    100%{transform:translate(0,0) rotate(0deg);}
+  }
+  .screen.shake-violent{ animation:screenShake .5s linear; }
+
+  @keyframes modalImpactFall{
+    0%  {transform:translate(0,0) rotate(0deg) scale(1);}
+    6%  {transform:translate(12px,-16px) rotate(-5deg) scale(1.04);}
+    16% {transform:translate(-6px,-2px) rotate(2deg) scale(.98);}
+    30% {transform:translate(70px,100px) rotate(20deg) scale(.92);}
+    42% {transform:translate(58px,88px) rotate(16deg) scale(.94);}
+    55% {transform:translate(150px,210px) rotate(36deg) scale(.85);}
+    66% {transform:translate(138px,196px) rotate(33deg) scale(.87);}
+    100%{transform:translate(360px,460px) rotate(60deg) scale(.55); opacity:0;}
+  }
+  .modal-box.impact-fall{
+    animation:modalImpactFall .8s cubic-bezier(.4,0,.2,1) forwards;
+    pointer-events:none;
+  }
+
+  @keyframes crumbleFall{
+    0%{transform:translate(0,0) rotate(0deg); opacity:1;}
+    100%{transform:translate(var(--cx,0), 160px) rotate(var(--cr,12deg)); opacity:0;}
+  }
+  #screen-select.crumbling .select-title{ --cx:-40px; --cr:-12deg; animation:crumbleFall .7s ease-in forwards; }
+  #screen-select.crumbling .job-panel .panel-top{ --cx:30px; --cr:8deg; animation:crumbleFall .7s ease-in .05s forwards; }
+  #screen-select.crumbling .job-stage{ --cx:-25px; --cr:-7deg; animation:crumbleFall .7s ease-in .1s forwards; }
+  #screen-select.crumbling .pointer,
+  #screen-select.crumbling .dots{ --cx:18px; --cr:10deg; animation:crumbleFall .7s ease-in .15s forwards; }
+  #screen-select.crumbling .select-btn-row{ --cx:-14px; --cr:-9deg; animation:crumbleFall .7s ease-in .2s forwards; }
+
+  .cutscene-dialogue{
+    position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+    font-family:'NeoDunggeunGothicPro', monospace;
+    font-size:clamp(26px,6vw,46px);
+    color:#fff2ec;
+    text-shadow:3px 3px 0 #000, 0 0 22px rgba(255,70,70,.65);
+    z-index:40; pointer-events:none; text-align:center; white-space:pre-wrap;
+    opacity:0; width:80%;
+  }
+  .cutscene-dialogue.show{opacity:1;}
+  .cutscene-dialogue.shake{animation:dialogueShake .11s linear infinite;}
+  @keyframes dialogueShake{
+    0%  {transform:translate(-50%,-50%) rotate(0deg);}
+    20% {transform:translate(calc(-50% + 4px),calc(-50% - 3px)) rotate(-2deg);}
+    40% {transform:translate(calc(-50% - 4px),calc(-50% + 3px)) rotate(2deg);}
+    60% {transform:translate(calc(-50% + 3px),calc(-50% + 4px)) rotate(-1.4deg);}
+    80% {transform:translate(calc(-50% - 3px),calc(-50% - 4px)) rotate(1.4deg);}
+    100%{transform:translate(-50%,-50%) rotate(0deg);}
+  }
+
+  .cutscene-blackout{
+    position:absolute; inset:0; background:#000; opacity:0;
+    z-index:38; pointer-events:none;
+  }
+  .cutscene-blackout.on{opacity:1;}
+  .cutscene-blackout.blink-open{ animation:blinkOpen 1.3s steps(1) forwards; }
+  @keyframes blinkOpen{
+    0%  {opacity:1;}
+    14% {opacity:1;}
+    20% {opacity:.5;}
+    28% {opacity:1;}
+    42% {opacity:.32;}
+    52% {opacity:.9;}
+    64% {opacity:.14;}
+    76% {opacity:.55;}
+    88% {opacity:.04;}
+    100%{opacity:0;}
+  }
+
+  /* ===== ROOM SCREEN (placeholder) ===== */
+  .room-scene{align-items:center; justify-content:center;}
+  .room-placeholder{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    text-align:center;
+  }
+  .room-title{
+    font-family:'NeoDunggeunGothicPro', monospace;
+    font-size:clamp(28px,6vw,48px); color:var(--cream);
+    text-shadow:3px 3px 0 var(--purple), 0 0 20px rgba(138,92,255,.5);
+  }
+  .room-sub{font-size:16px; color:var(--dim);}
+  .room-hint{font-size:13px; color:var(--dim); opacity:.6; margin-top:14px;}
 
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important; transition-duration:.001ms !important;}

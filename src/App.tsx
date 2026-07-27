@@ -121,6 +121,18 @@ function App() {
 
             </div>
           </div>
+
+          {/* ===================== ROOM SCREEN (placeholder) ===================== */}
+          <section id="screen-room" className="scene room-scene">
+            <div className="room-placeholder">
+              <div className="room-title">내 방</div>
+              <div className="room-sub" id="room-sub"></div>
+              <div className="room-hint">( 방 화면은 추후 채워질 예정입니다 )</div>
+            </div>
+          </section>
+
+          <div className="cutscene-dialogue" id="cutscene-dialogue"></div>
+          <div className="cutscene-blackout" id="cutscene-blackout"></div>
         </div>
       </div>
 
